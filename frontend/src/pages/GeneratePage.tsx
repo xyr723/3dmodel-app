@@ -43,31 +43,16 @@ export default function GeneratePage() {
 			background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
 			padding: '20px',
 			boxSizing: 'border-box'
-		}}>
-			<div style={{ 
-				maxWidth: '1200px', 
+		}} className="sm:p-12">
+			<div className="container" style={{ 
 				margin: '0 auto',
 				display: 'flex',
 				flexDirection: 'column',
 				gap: '24px'
 			}}>
 				{/* 页面标题区域 */}
-				<div style={{ 
-					background: 'rgba(255, 255, 255, 0.9)', 
-					borderRadius: '12px',
-					padding: '24px',
-					boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-					backdropFilter: 'blur(10px)'
-				}}>
-					<h1 style={{ 
-						margin: 0, 
-						fontSize: '32px', 
-						lineHeight: '1.2',
-						background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-						WebkitBackgroundClip: 'text',
-						WebkitTextFillColor: 'transparent',
-						fontWeight: '700'
-					}}>
+				<div className="surface">
+					<h1 className="h1 sm:text-24">
 						生成 3D 模型
 					</h1>
 					<p style={{ 
@@ -82,61 +67,17 @@ export default function GeneratePage() {
 				</div>
 
 				{/* 主要内容区域 */}
-				<div style={{ 
-					display: 'grid', 
-					gridTemplateColumns: 'minmax(300px, 400px) minmax(0, 1fr)',
-					gap: '24px',
-					alignItems: 'flex-start'
-				}}>
+				<div className="grid grid-aside-main gap-24 sm:grid-1">
 					{/* 左侧设置面板 */}
-					<div style={{ 
-						position: 'sticky',
-						top: '20px',
-						background: 'rgba(255, 255, 255, 0.95)',
-						borderRadius: '12px',
-						padding: '24px',
-						boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-						backdropFilter: 'blur(10px)',
-						border: '1px solid rgba(255, 255, 255, 0.2)'
-					}}>
-						<h3 style={{ 
-							margin: 0, 
-							fontSize: '20px', 
-							marginBottom: '20px', 
-							color: '#1f2937',
-							fontWeight: '600'
-						}}>
-							生成设置
-						</h3>
+					<div className="panel sticky-20">
+						<h3 className="h3">生成设置</h3>
 						<GenerateForm onResult={setResult} />
 					</div>
 
 					{/* 右侧预览区域 */}
-					<div style={{ 
-						background: 'rgba(255, 255, 255, 0.95)',
-						borderRadius: '12px',
-						padding: '24px',
-						boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-						backdropFilter: 'blur(10px)',
-						border: '1px solid rgba(255, 255, 255, 0.2)',
-						overflow: 'hidden'
-					}}>
-						<h3 style={{ 
-							margin: 0, 
-							fontSize: '20px', 
-							marginBottom: '20px', 
-							color: '#1f2937',
-							fontWeight: '600'
-						}}>
-							模型预览
-						</h3>
-						<div style={{ 
-							borderRadius: '8px', 
-							overflow: 'hidden',
-							boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-							minHeight: '400px',
-							background: '#f8fafc'
-						}}>
+					<div className="panel">
+						<h3 className="h3">模型预览</h3>
+						<div className="preview">
 							<ModelViewer url={result?.glbUrl} onMetrics={onMetrics} />
 						</div>
 						{result && (
@@ -194,30 +135,7 @@ export default function GeneratePage() {
 				</div>
 			</div>
 
-			{/* 响应式媒体查询 */}
-			<style>{`
-				@media (max-width: 1024px) {
-					div > div > div {
-						grid-template-columns: 1fr;
-					}
-					
-					.sticky {
-						position: relative !important;
-						top: 0 !important;
-						margin-bottom: 20px;
-					}
-				}
-				
-				@media (max-width: 768px) {
-					div[style*="padding: 20px"] {
-						padding: 12px;
-					}
-					
-					h1 {
-						font-size: 24px !important;
-					}
-				}
-			`}</style>
+			{/* 移除内联媒体查询 */}
 		</div>
 	);
 }

@@ -7,7 +7,7 @@ export default function App() {
 	const [tab, setTab] = useState<'generate' | 'dashboard'>('generate')
 	return (
 		<div style={{ width: '100%' }}>
-			<header style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: 12, width: '100%', borderBottom: '1px solid #333', boxSizing: 'border-box' }}>
+			<header className="app-header">
 				<button onClick={() => setTab('generate')} disabled={tab==='generate'}>Generate</button>
 				<button onClick={() => setTab('dashboard')} disabled={tab==='dashboard'}>Dashboard</button>
 			</header>

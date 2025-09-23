@@ -47,7 +47,7 @@ export function ModelViewer({ url, onMetrics }: { url?: string; onMetrics?: (m: 
 	}, [url]);
 
 	return (
-		<div style={{ width: '100%', height: 400, background: '#111', borderRadius: 8 }} ref={mountRef}>
+		<div style={{ width: '100%', height: '50vh', minHeight: 400, maxHeight: 800, background: '#111', borderRadius: 8 }} ref={mountRef}>
 			{!url && <div style={{ color: '#aaa', padding: 12 }}>No model yet</div>}
 			{error && <div style={{ color: 'tomato', padding: 12 }}>{error}</div>}
 		</div>

@@ -9,28 +9,76 @@ export default function DashboardPage() {
 	const successRate = metrics.length ? ((metrics.filter(m => m.isDownloadedRenderable).length / metrics.length) * 100).toFixed(0) + '%' : '-';
 
 	return (
-		<div style={{ maxWidth: 1000, margin: '0 auto', padding: 16 }}>
-			<h2>Evaluation Dashboard</h2>
-			<div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-				<div>Avg rating: <b>{avgRating}</b></div>
-				<div>Renderable success: <b>{successRate}</b></div>
-			</div>
-			<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-				<div>
-					<h3>Feedback</h3>
-					<ul>
-						{feedbacks.map((f, i) => (
-							<li key={i}>model {f.modelId.slice(0,8)} rating {f.rating}</li>
-						))}
-					</ul>
+		<div style={{ 
+			width: '100%', 
+			minHeight: '100vh',
+			background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+			padding: '20px',
+			boxSizing: 'border-box'
+		}} className="sm:p-12">
+			<div className="container" style={{ 
+				margin: '0 auto',
+				display: 'flex',
+				flexDirection: 'column',
+				gap: '24px'
+			}}>
+				{/* 标题区 */}
+				<div className="surface">
+					<h2 style={{ 
+						margin: 0, 
+						fontSize: 28, 
+						lineHeight: '32px',
+						background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+						WebkitBackgroundClip: 'text',
+						WebkitTextFillColor: 'transparent',
+						fontWeight: 700
+					}}>
+						评测面板
+					</h2>
+					<p style={{ marginTop: 12, marginBottom: 0, color: '#6b7280', fontSize: 16, lineHeight: 1.5 }}>
+						查看 3D 模型生成与渲染的质量与性能数据
+					</p>
 				</div>
-				<div>
-					<h3>Metrics</h3>
-					<ul>
-						{metrics.map((m, i) => (
-							<li key={i}>model {m.modelId.slice(0,8)} load {m.loadTimeMs ?? '-'}ms</li>
-						))}
-					</ul>
+
+				{/* KPI 区域 */}
+				<div className="grid grid-2 gap-24 sm:grid-1">
+					<div className="panel">
+						<div className="kpi-badge">平均评分</div>
+						<div style={{ fontSize: 24, fontWeight: 600, marginTop: 8 }}>{avgRating}</div>
+					</div>
+					<div className="panel">
+						<div className="kpi-badge">可渲染成功率</div>
+						<div style={{ fontSize: 24, fontWeight: 600, marginTop: 8 }}>{successRate}</div>
+					</div>
+				</div>
+
+				{/* 列表区块 */}
+				<div className="grid grid-2 gap-24 sm:grid-1">
+					<div className="panel">
+						<h3 className="h3" style={{ marginBottom: 8 }}>用户反馈</h3>
+						<p className="muted" style={{ marginTop: 0, marginBottom: 8 }}>用户对生成模型质量的打分记录</p>
+						<ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+							{feedbacks.map((f, i) => (
+								<li key={i} style={{ padding: '12px 8px', borderTop: i === 0 ? 'none' : '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+									<span style={{ color: '#374151' }}>模型 {f.modelId.slice(0,8)}</span>
+									<span style={{ color: '#111827', fontWeight: 600 }}>评分 {f.rating}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+					<div className="panel">
+						<h3 className="h3" style={{ marginBottom: 8 }}>性能指标</h3>
+						<p className="muted" style={{ marginTop: 0, marginBottom: 8 }}>模型下载与渲染性能统计</p>
+						<ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+							{metrics.map((m, i) => (
+								<li key={i} style={{ padding: '12px 8px', borderTop: i === 0 ? 'none' : '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+									<span style={{ color: '#374151' }}>模型 {m.modelId.slice(0,8)}</span>
+									<span style={{ color: '#6b7280' }}>加载耗时</span>
+									<span style={{ color: '#111827', fontWeight: 600 }}>{m.loadTimeMs ?? '-'} ms</span>
+								</li>
+							))}
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>

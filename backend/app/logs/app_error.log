@@ -1,1 +1,0 @@
-2025-09-23 18:12:49,292 - 3dmodel-app - [31mERROR[0m - database.py:115 - 数据库连接失败: The asyncio extension requires an async driver to be used. The loaded 'pysqlite' is not async.

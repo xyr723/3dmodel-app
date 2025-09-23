@@ -124,11 +124,64 @@ backend/
 
 ## 运行方式
 
-- 前端开发：
-  - 进入 `frontend`
-  - 安装依赖并启动：`pnpm i && pnpm dev`
-  - 可选：`.env` 配置 `VITE_MESHY_API_KEY` 与 `VITE_MESHY_BASE_URL`
-  - 未配置 key 时走 mock，便于开发调试
+### 环境要求
+- Node.js 18+ 
+- pnpm (推荐) 或 npm/yarn
+
+### 前端运行
+
+1. **安装依赖**
+   ```bash
+   cd frontend
+   pnpm install
+   ```
+
+2. **启动开发服务器**
+   ```bash
+   pnpm dev
+   ```
+   访问 http://localhost:5173
+
+3. **环境配置（可选）**
+   
+   在 `frontend` 目录下创建 `.env` 文件：
+   ```env
+   VITE_MESHY_API_KEY=your_meshy_api_key
+   VITE_MESHY_BASE_URL=https://api.meshy.ai
+   ```
+   
+   **注意**：未配置 API key 时，应用会使用 mock 模式，便于开发调试。
+
+4. **其他命令**
+   ```bash
+   pnpm build    # 构建生产版本
+   pnpm preview  # 预览构建结果
+   pnpm lint     # 代码检查
+   ```
+
+### 后端运行（待实现）
+
+目前后端部分尚未实现，计划使用 FastAPI + Python。
+
+**预期运行方式**：
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+
+### 项目结构说明
+
+- **frontend/**: React + TypeScript + Vite + Three.js 前端应用
+- **backend/**: FastAPI 后端服务（待开发）
+- **docs/**: 项目文档
+
+### 开发模式特性
+
+- **Mock 模式**：无 API key 时自动使用 mock 数据
+- **热重载**：前端代码修改后自动刷新
+- **TypeScript**：完整的类型检查
+- **ESLint**：代码质量检查
 
 ---
 

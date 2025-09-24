@@ -13,7 +13,7 @@ export type GeneratedModel = {
   status: GenerationStatus;
   glbUrl?: string;
   previewImageUrl?: string;
-  provider: 'meshy' | 'mock';
+  provider: 'meshy' | 'mock' | 'backend';
   errorMessage?: string;
 };
 

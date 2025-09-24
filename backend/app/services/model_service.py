@@ -13,6 +13,8 @@ from app.models.response import GenerateResponse, TaskStatus, TaskStatusResponse
 from app.core.config import settings
 from app.services.storage_service import StorageService
 from app.utils.logger import logger
+from app.services.sketchfab_service import SketchfabService
+from app.models.request import SketchfabSearchRequest, SketchfabDownloadRequest
 
 
 class ModelService:
@@ -22,13 +24,15 @@ class ModelService:
         self.storage_service = StorageService()
         self.tasks = {}  # 内存中的任务状态存储，生产环境应使用Redis
         self.provider = settings.MODEL_PROVIDER
+        self.sketchfab_service = SketchfabService()
     
-    async def generate_model(self, request: GenerateRequest) -> GenerateResponse:
+    async def generate_model(self, request: GenerateRequest, provider_override: Optional[str] = None) -> GenerateResponse:
         """
         生成3D模型
         
         Args:
             request: 生成请求
+            provider_override: 可选，覆盖默认提供商
         
         Returns:
             GenerateResponse: 生成响应
@@ -45,13 +49,16 @@ class ModelService:
         }
         self.tasks[task_id] = task_data
         
-        # 根据提供商选择生成方法
-        if self.provider == "meshy":
+        # 根据提供商选择生成/检索方法
+        provider = (provider_override or self.provider or "").lower()
+        if provider == "meshy":
             result = await self._generate_with_meshy(task_id, request)
-        elif self.provider == "local":
+        elif provider == "local":
             result = await self._generate_with_local_model(task_id, request)
+        elif provider == "sketchfab":
+            result = await self._generate_with_sketchfab(task_id, request)
         else:
-            raise ValueError(f"不支持的模型提供商: {self.provider}")
+            raise ValueError(f"不支持的模型提供商: {provider}")
         
         return result
     
@@ -148,35 +155,27 @@ class ModelService:
             self.tasks[task_id]["error"] = str(e)
 
             logger.error(f"Meshy模型生成失败 {task_id}: {str(e)}")
-            
             return GenerateResponse(
                 task_id=task_id,
                 status=TaskStatus.FAILED,
-                message="模型生成失败",
+                message="生成失败",
                 error_details=str(e),
-                created_at=self.tasks[task_id]["created_at"]
+                created_at=self.tasks[task_id]["created_at"],
             )
     
-    async def _poll_meshy_task(
-        self, 
-        session: aiohttp.ClientSession,
-        headers: Dict[str, str],
-        meshy_task_id: str
-    ) -> str:
-        """轮询Meshy任务状态"""
-        max_attempts = 60  # 最多轮询60次（5分钟）
-        
-        for attempt in range(max_attempts):
-            await asyncio.sleep(5)  # 等待5秒
-            
+    async def _poll_meshy_task(self, session, headers, meshy_task_id) -> str:
+        """轮询Meshy任务直至完成，返回模型URL"""
+        start_time = datetime.utcnow()
+        timeout = timedelta(seconds=settings.MAX_GENERATION_TIME)
+        while datetime.utcnow() - start_time < timeout:
+            await asyncio.sleep(1.5)
             async with session.get(
                 f"{settings.MESHY_API_URL}/openapi/v2/text-to-3d/{meshy_task_id}",
                 headers=headers
-            ) as response:
-                if response.status != 200:
-                    continue
-                
-                result = await response.json()
+            ) as resp:
+                if resp.status != 200:
+                    raise Exception(f"Meshy状态查询失败: {resp.status}")
+                result = await resp.json()
                 status = result.get("status")
                 
                 if status == "SUCCEEDED":
@@ -193,10 +192,79 @@ class ModelService:
         task_id: str, 
         request: GenerateRequest
     ) -> GenerateResponse:
-        """使用本地模型生成"""
-        # 这里实现本地模型调用逻辑
-        # 可以集成Stable Diffusion 3D、Point-E等开源模型
-        raise NotImplementedError("本地模型生成尚未实现")
+        """使用本地模型生成（占位实现）"""
+        try:
+            # 标记处理中
+            self.tasks[task_id]["status"] = TaskStatus.PROCESSING
+            self.tasks[task_id]["progress"] = 10.0
+            
+            # 生成一个简单的 OBJ 立方体占位模型（几何体很小）
+            obj_data = (
+                "# minimal cube\n"
+                "o cube\n"
+                "v -0.5 -0.5 -0.5\n"
+                "v  0.5 -0.5 -0.5\n"
+                "v  0.5  0.5 -0.5\n"
+                "v -0.5  0.5 -0.5\n"
+                "v -0.5 -0.5  0.5\n"
+                "v  0.5 -0.5  0.5\n"
+                "v  0.5  0.5  0.5\n"
+                "v -0.5  0.5  0.5\n"
+                "f 1 2 3 4\n"
+                "f 5 6 7 8\n"
+                "f 1 5 8 4\n"
+                "f 2 6 7 3\n"
+                "f 4 3 7 8\n"
+                "f 1 2 6 5\n"
+            ).encode("utf-8")
+            
+            # 模拟一定的处理时间
+            await asyncio.sleep(0.5)
+            self.tasks[task_id]["progress"] = 60.0
+            
+            # 保存占位模型文件
+            file_path = await self.storage_service.save_model_file(
+                task_id=task_id,
+                file_data=obj_data,
+                file_format=request.output_format or "obj",
+            )
+            
+            # 生成预览（可选，当前返回 None）
+            preview_url = await self._generate_preview(file_path)
+            
+            # 标记完成
+            self.tasks[task_id]["status"] = TaskStatus.COMPLETED
+            self.tasks[task_id]["progress"] = 100.0
+            self.tasks[task_id]["completed_at"] = datetime.utcnow()
+            self.tasks[task_id]["file_path"] = file_path
+            
+            processing_time = (
+                self.tasks[task_id]["completed_at"] - self.tasks[task_id]["created_at"]
+            ).total_seconds()
+            
+            return GenerateResponse(
+                task_id=task_id,
+                status=TaskStatus.COMPLETED,
+                message="本地占位模型生成完成",
+                model_url=None,  # 本地存储路径通过下载接口提供
+                preview_url=preview_url,
+                download_url=f"/api/generate/download/{task_id}",
+                file_format=request.output_format or "obj",
+                created_at=self.tasks[task_id]["created_at"],
+                completed_at=self.tasks[task_id]["completed_at"],
+                processing_time=processing_time,
+            )
+        except Exception as e:
+            self.tasks[task_id]["status"] = TaskStatus.FAILED
+            self.tasks[task_id]["error"] = str(e)
+            logger.error(f"本地模型生成失败 {task_id}: {str(e)}")
+            return GenerateResponse(
+                task_id=task_id,
+                status=TaskStatus.FAILED,
+                message="生成失败",
+                error_details=str(e),
+                created_at=self.tasks[task_id]["created_at"],
+            )
     
     async def _download_and_store_model(
         self,
@@ -314,3 +382,83 @@ class ModelService:
         self.tasks[task_id]["status"] = TaskStatus.CANCELLED
         logger.info(f"任务已取消: {task_id}")
         return True
+    
+    async def _generate_with_sketchfab(
+        self,
+        task_id: str,
+        request: GenerateRequest
+    ) -> GenerateResponse:
+        """使用Sketchfab搜索并返回最匹配模型"""
+        try:
+            self.tasks[task_id]["status"] = TaskStatus.PROCESSING
+            self.tasks[task_id]["progress"] = 10.0
+
+            # 搜索可下载、相关性最高的模型
+            search_req = SketchfabSearchRequest(
+                query=request.prompt,
+                downloadable=True,
+                per_page=1,
+                sort_by="relevance"
+            )
+            search_res = await self.sketchfab_service.search_models(search_req)
+            if not search_res.models:
+                raise Exception("未找到相关模型")
+            top = search_res.models[0]
+
+            self.tasks[task_id]["progress"] = 50.0
+
+            model_url: Optional[str] = None
+            file_format: Optional[str] = None
+            preview_url: Optional[str] = top.preview_url or top.thumbnail_url
+
+            # 尝试获取可下载的gltf链接
+            if top.downloadable:
+                dl_res = await self.sketchfab_service.download_model(
+                    SketchfabDownloadRequest(model_uid=top.uid, format="gltf")
+                )
+                if dl_res.status == "success" and dl_res.download_url:
+                    model_url = dl_res.download_url
+                    file_format = dl_res.file_format or "gltf"
+            
+            # 若无法下载，退回到可嵌入/预览链接（前端GLTF加载可能失败，这里仍返回以便前端处理）
+            if not model_url:
+                model_url = top.embed_url or top.preview_url
+                file_format = file_format or None
+
+            self.tasks[task_id]["status"] = TaskStatus.COMPLETED
+            self.tasks[task_id]["progress"] = 100.0
+            self.tasks[task_id]["completed_at"] = datetime.utcnow()
+            self.tasks[task_id]["model_url"] = model_url
+
+            processing_time = (
+                self.tasks[task_id]["completed_at"] - self.tasks[task_id]["created_at"]
+            ).total_seconds()
+
+            return GenerateResponse(
+                task_id=task_id,
+                status=TaskStatus.COMPLETED,
+                message="已从Sketchfab返回最匹配模型",
+                model_url=model_url,
+                preview_url=preview_url,
+                download_url=None,
+                file_format=file_format,
+                created_at=self.tasks[task_id]["created_at"],
+                completed_at=self.tasks[task_id]["completed_at"],
+                processing_time=processing_time,
+                metadata={
+                    "sketchfab_uid": top.uid,
+                    "sketchfab_name": top.name,
+                    "license": top.license,
+                }
+            )
+        except Exception as e:
+            self.tasks[task_id]["status"] = TaskStatus.FAILED
+            self.tasks[task_id]["error"] = str(e)
+            logger.error(f"Sketchfab检索失败 {task_id}: {str(e)}")
+            return GenerateResponse(
+                task_id=task_id,
+                status=TaskStatus.FAILED,
+                message="生成失败",
+                error_details=str(e),
+                created_at=self.tasks[task_id]["created_at"],
+            )

@@ -6,8 +6,9 @@
 
 - 🎨 **多种生成模式**: 支持文本转3D、图片转3D、草图转3D
 - 🎯 **多样化风格**: 写实、卡通、低面数、抽象、建筑等风格
+- 🏛️ **Sketchfab集成**: 搜索和下载全球最大3D模型库的现成模型
 - 🚀 **高性能**: 异步处理，支持并发请求
-- 💾 **智能缓存**: Redis缓存，避免重复生成
+- 💾 **智能缓存**: Redis缓存，避免重复生成和搜索
 - 📊 **质量评估**: 自动评估模型质量
 - 💬 **用户反馈**: 收集和分析用户反馈
 - 🔒 **安全认证**: API密钥和JWT认证
@@ -53,6 +54,7 @@ cp .env.example .env
 
 主要配置项：
 - `MESHY_API_KEY`: Meshy AI API密钥
+- `SKETCHFAB_API_TOKEN`: Sketchfab API令牌（可选）
 - `DATABASE_URL`: 数据库连接URL
 - `REDIS_URL`: Redis连接URL
 - `STORAGE_TYPE`: 存储类型 (local/s3/gcs)
@@ -104,6 +106,47 @@ GET /api/generate/download/{task_id}?format=obj
 Authorization: Bearer your_api_key
 ```
 
+### 搜索Sketchfab模型
+
+```bash
+GET /api/sketchfab/search?query=car&category=vehicles&downloadable=true
+Authorization: Bearer your_api_key
+
+POST /api/sketchfab/search
+Content-Type: application/json
+Authorization: Bearer your_api_key
+
+{
+  "query": "car",
+  "category": "vehicles",
+  "license": "cc",
+  "downloadable": true,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+### 获取模型详情
+
+```bash
+GET /api/sketchfab/model/{model_uid}
+Authorization: Bearer your_api_key
+```
+
+### 下载Sketchfab模型
+
+```bash
+GET /api/sketchfab/download/{model_uid}?format=original
+Authorization: Bearer your_api_key
+```
+
+### 获取热门模型
+
+```bash
+GET /api/sketchfab/popular?category=characters&limit=20
+Authorization: Bearer your_api_key
+```
+
 ### 提交用户反馈
 
 ```bash
@@ -126,12 +169,14 @@ backend/
 │   ├── main.py               # FastAPI应用入口
 │   ├── api/                  # API路由
 │   │   ├── generate.py       # 3D生成接口
-│   │   └── evaluate.py       # 评估反馈接口
+│   │   ├── evaluate.py       # 评估反馈接口
+│   │   └── sketchfab.py      # Sketchfab模型接口
 │   ├── core/                 # 核心配置
 │   │   ├── config.py         # 应用配置
 │   │   └── security.py       # 安全认证
 │   ├── services/             # 业务服务
 │   │   ├── model_service.py  # 模型生成服务
+│   │   ├── sketchfab_service.py # Sketchfab API服务
 │   │   ├── cache_service.py  # 缓存服务
 │   │   └── storage_service.py# 存储服务
 │   ├── models/               # 数据模型

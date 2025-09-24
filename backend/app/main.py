@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 from contextlib import asynccontextmanager
 
-from app.api import generate, evaluate
+from app.api import generate, evaluate, sketchfab
 from app.core.config import settings
 from app.utils.logger import logger
 from app.db.database import init_db
@@ -29,8 +29,8 @@ async def lifespan(app: FastAPI):
 
 # 创建FastAPI实例
 app = FastAPI(
-    title="3D模型生成API",
-    description="基于AI的3D模型生成和评估服务",
+    title="3D模型生成与获取API",
+    description="基于AI的3D模型生成、评估服务，以及Sketchfab模型库集成",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -65,6 +65,7 @@ async def health_check():
 # 注册路由
 app.include_router(generate.router, prefix="/api", tags=["生成"])
 app.include_router(evaluate.router, prefix="/api", tags=["评估"])
+app.include_router(sketchfab.router, prefix="/api", tags=["Sketchfab"])
 
 
 if __name__ == "__main__":

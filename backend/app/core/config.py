@@ -3,7 +3,10 @@
 """
 import os
 from typing import List, Optional
-from pydantic import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -27,9 +30,10 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = "redis://localhost:6379/0"
     
     # 第三方API配置
-    MESHY_API_KEY: Optional[str] = None
+    MESHY_API_KEY: Optional[str] = "msy_vilZa7D2cNNchyRwOQ6XcEcopA3L5q0oB8AR"
     MESHY_API_URL: str = "https://api.meshy.ai"
     OPENAI_API_KEY: Optional[str] = None
+    SKETCHFAB_API_TOKEN: Optional[str] = None
     
     # 模型配置
     MODEL_PROVIDER: str = "meshy"  # meshy, local, openai

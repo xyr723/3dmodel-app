@@ -280,6 +280,90 @@ class CacheService:
         # 比如根据历史数据预生成一些热门的模型
         pass
     
+    async def get(self, key: str) -> Optional[Any]:
+        """
+        通用缓存获取方法
+        
+        Args:
+            key: 缓存键
+        
+        Returns:
+            Optional[Any]: 缓存的值
+        """
+        try:
+            redis_client = await self._get_redis_client()
+            
+            if redis_client:
+                # 从Redis获取
+                cached_data = await redis_client.get(key)
+                if cached_data:
+                    logger.info(f"从Redis缓存获取: {key}")
+                    try:
+                        return json.loads(cached_data)
+                    except json.JSONDecodeError:
+                        # 如果不是JSON格式，直接返回字符串
+                        return cached_data
+            else:
+                # 从内存缓存获取
+                if key in self.memory_cache:
+                    cache_entry = self.memory_cache[key]
+                    # 检查是否过期
+                    if cache_entry["expires_at"] > self._current_timestamp():
+                        logger.info(f"从内存缓存获取: {key}")
+                        return cache_entry["data"]
+                    else:
+                        # 删除过期条目
+                        del self.memory_cache[key]
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取缓存失败: {str(e)}")
+            return None
+    
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+        """
+        通用缓存设置方法
+        
+        Args:
+            key: 缓存键
+            value: 要缓存的值
+            ttl: 过期时间（秒）
+        
+        Returns:
+            bool: 是否成功缓存
+        """
+        try:
+            cache_ttl = ttl or self.ttl
+            redis_client = await self._get_redis_client()
+            
+            if redis_client:
+                # 存储到Redis
+                if isinstance(value, (dict, list)):
+                    cache_value = json.dumps(value, default=str)
+                else:
+                    cache_value = str(value)
+                
+                await redis_client.setex(key, cache_ttl, cache_value)
+                logger.info(f"值已缓存到Redis: {key}")
+            else:
+                # 存储到内存缓存
+                self.memory_cache[key] = {
+                    "data": value,
+                    "expires_at": self._current_timestamp() + cache_ttl
+                }
+                
+                # 清理过期的内存缓存条目
+                await self._cleanup_memory_cache()
+                
+                logger.info(f"值已缓存到内存: {key}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"缓存值失败: {str(e)}")
+            return False
+
     async def close(self):
         """关闭缓存服务"""
         if self.redis_client:

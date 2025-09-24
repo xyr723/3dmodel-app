@@ -198,3 +198,96 @@ class ApiUsageResponse(BaseModel):
     period_start: datetime = Field(..., description="周期开始时间")
     period_end: datetime = Field(..., description="周期结束时间")
     last_request: Optional[datetime] = Field(None, description="最后请求时间")
+
+
+class SketchfabModel(BaseModel):
+    """Sketchfab模型信息"""
+    
+    uid: str = Field(..., description="模型唯一标识符")
+    name: str = Field(..., description="模型名称")
+    description: Optional[str] = Field(None, description="模型描述")
+    
+    # 作者信息
+    author: str = Field(..., description="作者名称")
+    author_url: Optional[str] = Field(None, description="作者链接")
+    
+    # 模型属性
+    face_count: Optional[int] = Field(None, description="面数")
+    vertex_count: Optional[int] = Field(None, description="顶点数")
+    animated: bool = Field(False, description="是否有动画")
+    rigged: bool = Field(False, description="是否有骨骼")
+    
+    # 许可证信息
+    license: Optional[str] = Field(None, description="许可证类型")
+    license_label: Optional[str] = Field(None, description="许可证标签")
+    
+    # 统计信息
+    view_count: Optional[int] = Field(None, description="浏览次数")
+    like_count: Optional[int] = Field(None, description="点赞数")
+    comment_count: Optional[int] = Field(None, description="评论数")
+    
+    # 媒体信息
+    thumbnail_url: str = Field(..., description="缩略图URL")
+    preview_url: Optional[str] = Field(None, description="预览图URL")
+    embed_url: Optional[str] = Field(None, description="嵌入链接")
+    
+    # 下载信息
+    downloadable: bool = Field(False, description="是否可下载")
+    download_url: Optional[str] = Field(None, description="下载链接")
+    
+    # 分类标签
+    categories: Optional[List[str]] = Field(None, description="分类标签")
+    tags: Optional[List[str]] = Field(None, description="标签")
+    
+    # 时间信息
+    published_at: Optional[datetime] = Field(None, description="发布时间")
+    created_at: Optional[datetime] = Field(None, description="创建时间")
+
+
+class SketchfabSearchResponse(BaseModel):
+    """Sketchfab搜索响应"""
+    
+    query: str = Field(..., description="搜索关键词")
+    total_count: int = Field(..., description="总结果数")
+    page: int = Field(..., description="当前页码")
+    per_page: int = Field(..., description="每页数量")
+    total_pages: int = Field(..., description="总页数")
+    
+    # 搜索结果
+    models: List[SketchfabModel] = Field(..., description="模型列表")
+    
+    # 搜索统计
+    search_time: Optional[float] = Field(None, description="搜索耗时(秒)")
+    
+    # 筛选统计
+    filters_applied: Optional[Dict[str, Any]] = Field(None, description="应用的筛选条件")
+    
+    # 时间信息
+    searched_at: datetime = Field(default_factory=datetime.utcnow, description="搜索时间")
+
+
+class SketchfabDownloadResponse(BaseModel):
+    """Sketchfab下载响应"""
+    
+    model_uid: str = Field(..., description="模型UID")
+    download_id: str = Field(..., description="下载ID")
+    status: str = Field(..., description="下载状态")
+    message: str = Field(..., description="响应消息")
+    
+    # 下载信息
+    download_url: Optional[str] = Field(None, description="下载链接")
+    file_format: Optional[str] = Field(None, description="文件格式")
+    file_size: Optional[int] = Field(None, description="文件大小(字节)")
+    
+    # 模型信息
+    model_name: Optional[str] = Field(None, description="模型名称")
+    author: Optional[str] = Field(None, description="作者")
+    license: Optional[str] = Field(None, description="许可证")
+    
+    # 时间信息
+    requested_at: datetime = Field(default_factory=datetime.utcnow, description="请求时间")
+    expires_at: Optional[datetime] = Field(None, description="链接过期时间")
+    
+    # 使用限制
+    attribution_required: bool = Field(True, description="是否需要署名")
+    commercial_use: bool = Field(False, description="是否允许商用")

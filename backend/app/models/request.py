@@ -140,3 +140,56 @@ class ModelOptimizeRequest(BaseModel):
         if not v or len(v) < 8:
             raise ValueError("无效的任务ID")
         return v
+
+
+class SketchfabSearchRequest(BaseModel):
+    """Sketchfab模型搜索请求"""
+    
+    query: str = Field(..., min_length=1, max_length=200, description="搜索关键词")
+    category: Optional[str] = Field(None, description="模型分类")
+    license: Optional[str] = Field("cc", description="许可证类型 (cc, cc-by, cc-by-sa等)")
+    animated: Optional[bool] = Field(None, description="是否包含动画")
+    rigged: Optional[bool] = Field(None, description="是否有骨骼绑定")
+    downloadable: bool = Field(True, description="是否可下载")
+    
+    # 分页参数
+    page: int = Field(1, ge=1, description="页码")
+    per_page: int = Field(20, ge=1, le=100, description="每页数量")
+    
+    # 排序参数
+    sort_by: Optional[str] = Field("relevance", description="排序方式 (relevance, likes, views, recent)")
+    
+    # 筛选参数
+    min_face_count: Optional[int] = Field(None, ge=0, description="最小面数")
+    max_face_count: Optional[int] = Field(None, ge=0, description="最大面数")
+    staff_picked: Optional[bool] = Field(None, description="是否为官方推荐")
+    
+    @validator('query')
+    def validate_query(cls, v):
+        """验证搜索关键词"""
+        if not v or v.strip() == "":
+            raise ValueError("搜索关键词不能为空")
+        return v.strip()
+    
+    @validator('max_face_count')
+    def validate_face_count(cls, v, values):
+        """验证面数范围"""
+        min_face = values.get('min_face_count')
+        if min_face and v and v < min_face:
+            raise ValueError("最大面数不能小于最小面数")
+        return v
+
+
+class SketchfabDownloadRequest(BaseModel):
+    """Sketchfab模型下载请求"""
+    
+    model_uid: str = Field(..., description="Sketchfab模型UID")
+    format: Optional[str] = Field("original", description="下载格式")
+    user_id: Optional[str] = Field(None, description="用户ID")
+    
+    @validator('model_uid')
+    def validate_model_uid(cls, v):
+        """验证模型UID"""
+        if not v or len(v) < 8:
+            raise ValueError("无效的模型UID")
+        return v

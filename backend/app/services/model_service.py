@@ -73,10 +73,9 @@ class ModelService:
             }
             
             payload = {
-                "mode": request.mode.value,
+                "mode": "preview",  # Meshy v2 API 需要明确指定为 preview
                 "prompt": request.prompt,
                 "art_style": request.style.value,
-                "negative_prompt": request.negative_prompt or "",
             }
             
             if request.image_url:
@@ -84,12 +83,15 @@ class ModelService:
             
             async with aiohttp.ClientSession() as session:
                 # 提交生成任务
+                print(headers)
+                print(payload)
                 async with session.post(
-                    f"{settings.MESHY_API_URL}/v1/text-to-3d",
+                    f"{settings.MESHY_API_URL}/openapi/v2/text-to-3d",
                     headers=headers,
                     json=payload
                 ) as response:
                     if response.status != 200:
+                        print(response.status)
                         error_text = await response.text()
                         raise Exception(f"Meshy API错误: {error_text}")
                     
@@ -144,7 +146,7 @@ class ModelService:
             # 标记任务失败
             self.tasks[task_id]["status"] = TaskStatus.FAILED
             self.tasks[task_id]["error"] = str(e)
-            
+
             logger.error(f"Meshy模型生成失败 {task_id}: {str(e)}")
             
             return GenerateResponse(
@@ -168,7 +170,7 @@ class ModelService:
             await asyncio.sleep(5)  # 等待5秒
             
             async with session.get(
-                f"{settings.MESHY_API_URL}/v1/text-to-3d/{meshy_task_id}",
+                f"{settings.MESHY_API_URL}/openapi/v2/text-to-3d/{meshy_task_id}",
                 headers=headers
             ) as response:
                 if response.status != 200:

@@ -62,7 +62,7 @@ export default function GeneratePage() {
 						fontSize: '16px',
 						lineHeight: '1.5'
 					}}>
-						左侧为生成设置（随滚动粘性固定），右侧为大预览区
+						左侧为生成设置，右侧为大预览区
 					</p>
 				</div>
 

@@ -40,7 +40,7 @@ POST /api/sketchfab/search
 **参数:**
 - `query`: 搜索关键词 (必需)
 - `category`: 模型分类 (可选)
-- `license`: 许可证类型 (默认: cc)
+- `license`: 许可证类型 (默认: cc0)
 - `downloadable`: 是否可下载 (默认: true)
 - `page`: 页码 (默认: 1)
 - `per_page`: 每页数量 (默认: 20)

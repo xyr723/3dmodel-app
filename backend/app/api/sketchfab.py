@@ -59,7 +59,7 @@ async def search_sketchfab_models(
 async def search_sketchfab_models_get(
     query: str = Query(..., description="搜索关键词"),
     category: Optional[str] = Query(None, description="模型分类"),
-    license: Optional[str] = Query("cc", description="许可证类型"),
+    license: Optional[str] = Query("cc0", description="许可证类型"),
     animated: Optional[bool] = Query(None, description="是否包含动画"),
     rigged: Optional[bool] = Query(None, description="是否有骨骼绑定"),
     downloadable: Optional[str] = Query("true", description="是否可下载"),

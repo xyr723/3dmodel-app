@@ -217,8 +217,27 @@ class SketchfabService:
             params['categories'] = request.category
             
         if request.license:
-            # 直接使用许可证字符串别名
-            params['license'] = request.license
+            # Sketchfab API许可证参数格式映射
+            # 根据API文档，正确的许可证值应该是简化格式
+            license_mapping = {
+                'cc0': None,  # CC0通常不需要特殊参数，使用免费/开放筛选
+                'cc-by': 'by',
+                'cc-by-sa': 'by-sa', 
+                'cc-by-nc': 'by-nc',
+                'cc-by-nc-sa': 'by-nc-sa',
+                'cc': None  # 通用CC许可证，不指定具体类型
+            }
+            
+            mapped_license = license_mapping.get(request.license.lower(), request.license)
+            if mapped_license:  # 只有在有映射值时才添加许可证参数
+                params['license'] = mapped_license
+            
+            # 对于CC0，我们使用免费下载筛选而不是许可证参数
+            if request.license.lower() in ['cc0', 'cc']:
+                params['downloadable'] = "true"  # 确保可下载
+                # 移除可能冲突的许可证参数
+                if 'license' in params:
+                    del params['license']
             
         if request.animated is not None:
             params['animated'] = "true" if request.animated else "false"
@@ -241,6 +260,9 @@ class SketchfabService:
         
         try:
             start_time = time.time()
+            
+            # 调试日志 - 显示实际发送的参数
+            logger.info(f"发送到Sketchfab API的参数: {params}")
             
             # 发起搜索请求
             response_data = await self._make_request('search', params)

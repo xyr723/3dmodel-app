@@ -36,6 +36,7 @@ export default function GeneratePage() {
 		alert('感谢您的反馈！');
 	};
 
+
 	return (
 		<div style={{ 
 			width: '100%', 

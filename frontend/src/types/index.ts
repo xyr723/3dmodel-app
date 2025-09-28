@@ -139,3 +139,24 @@ export type SketchfabCategoriesResponse = {
   categories: string[];
   count: number;
 }; 
+
+// Sketchfab 搜索记录类型
+export type SketchfabSearchRecord = {
+  id: string;
+  query: string;
+  category?: string;
+  license?: SketchfabLicense;
+  total_count: number;
+  models_found: number;
+  search_time: number;
+  timestamp: number;
+  filters_applied?: {
+    animated?: boolean;
+    rigged?: boolean;
+    downloadable?: boolean;
+    sort_by?: string;
+    min_face_count?: number;
+    max_face_count?: number;
+    staff_picked?: boolean;
+  };
+};

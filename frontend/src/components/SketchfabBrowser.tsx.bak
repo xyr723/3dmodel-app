@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { SketchfabModel, SketchfabSearchRequest, SketchfabCategory, SketchfabLicense, SketchfabSearchRecord } from '../types';
+import type { SketchfabModel, SketchfabSearchRequest, SketchfabCategory, SketchfabLicense } from '../types';
 import { searchSketchfabModels, getPopularSketchfabModels, getSketchfabCategories } from '../services/sketchfabClient';
-import { useSearchStore } from '../store/searchStore';
 
 interface SketchfabBrowserProps {
   onModelSelect: (model: SketchfabModel) => void;
 }
 
 export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
-  const addSearchRecord = useSearchStore((state) => state.addSearchRecord);
   const [searchQuery, setSearchQuery] = useState('');
   const [models, setModels] = useState<SketchfabModel[]>([]);
   const [categories, setCategories] = useState<SketchfabCategory[]>([]);
@@ -110,26 +108,6 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
         setModels(response.models);
         setTotalPages(response.total_pages);
         
-        
-        // 保存搜索记录
-        const searchRecord: SketchfabSearchRecord = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          query: searchQuery,
-          category: selectedCategory || undefined,
-          license: selectedLicense || undefined,
-          total_count: response.total_count,
-          models_found: response.models.length,
-          search_time: response.search_time,
-          timestamp: Date.now(),
-          filters_applied: {
-            animated: filters.animated,
-            rigged: filters.rigged,
-            downloadable: filters.downloadable,
-            sort_by: sortBy,
-            staff_picked: filters.staff_picked,
-          }
-        };
-        await addSearchRecord(searchRecord);
         // 自动选择第一个模型进行预览
         if (response.models.length > 0) {
           onModelSelect(response.models[0]);
@@ -140,25 +118,6 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
         setModels(popular);
         setTotalPages(1);
         
-        
-        // 保存浏览热门模型的记录
-        const browseRecord: SketchfabSearchRecord = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          query: "热门推荐" + (selectedCategory ? ` - ${selectedCategory}` : ""),
-          category: selectedCategory || undefined,
-          license: undefined,
-          total_count: popular.length,
-          models_found: popular.length,
-          search_time: 0,
-          timestamp: Date.now(),
-          filters_applied: {
-            downloadable: filters.downloadable,
-            animated: filters.animated,
-            rigged: filters.rigged,
-            staff_picked: filters.staff_picked,
-          }
-        };
-        await addSearchRecord(browseRecord);
         // 自动选择第一个模型进行预览
         if (popular.length > 0) {
           onModelSelect(popular[0]);

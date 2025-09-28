@@ -77,6 +77,6 @@ pnpm dev
 
 - `frontend/`: React + TypeScript + Vite + Three.js 前端
 - `backend/`: FastAPI 后端（生成、状态查询、下载、Sketchfab 集成）
-- `docs/`: 文档
+- `docs+demo/`: 产品说明文档、demo视频
 
 更多细节请查看 `frontend/README.md` 与 `backend/README.md`。

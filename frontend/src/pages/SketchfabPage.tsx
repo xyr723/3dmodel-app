@@ -3,11 +3,12 @@ import { SketchfabBrowser } from '../components/SketchfabBrowser';
 import { ModelViewer } from '../components/ModelViewer';
 import type { SketchfabModel, GeneratedModel, EvaluationMetrics, Feedback } from '../types';
 import { useEvalStore } from '../store/evalStore';
-import { sketchfabModelToGeneratedModel } from '../services/sketchfabClient';
+import { sketchfabModelToGeneratedModel, downloadSketchfabModel } from '../services/sketchfabClient';
 
 export default function SketchfabPage() {
   const [selectedModel, setSelectedModel] = useState<SketchfabModel | null>(null);
   const [generatedModel, setGeneratedModel] = useState<GeneratedModel | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const addMetrics = useEvalStore((s) => s.addMetrics);
   const addFeedback = useEvalStore((s) => s.addFeedback);
 
@@ -40,6 +41,36 @@ export default function SketchfabPage() {
     };
     await addFeedback(fb);
     alert('感谢您的反馈！');
+  };
+
+  const handleDownload = async () => {
+    if (!selectedModel || !selectedModel.downloadable) return;
+    
+    setDownloading(true);
+    try {
+      const downloadResponse = await downloadSketchfabModel({
+        model_uid: selectedModel.uid,
+        format: 'original'
+      });
+      
+      if (downloadResponse.download_url) {
+        // 创建临时链接进行下载
+        const link = document.createElement('a');
+        link.href = downloadResponse.download_url;
+        link.download = `${selectedModel.name}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        alert('下载已开始！');
+      } else {
+        alert('下载链接获取失败，请稍后重试。');
+      }
+    } catch (error: any) {
+      console.error('Download failed:', error);
+      alert(`下载失败: ${error.message || '未知错误'}`);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -207,25 +238,31 @@ export default function SketchfabPage() {
                   </div>
                 )}
                 
-                {selectedModel.downloadable && selectedModel.download_url && (
+                {selectedModel.downloadable && (
                   <div style={{ marginTop: 16 }}>
-                    <a 
-                      href={selectedModel.download_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button 
+                      onClick={handleDownload}
+                      disabled={downloading}
                       style={{
                         display: 'inline-block',
-                        padding: '8px 16px',
-                        backgroundColor: '#007bff',
+                        padding: '12px 24px',
+                        backgroundColor: downloading ? '#6c757d' : '#007bff',
                         color: 'white',
-                        textDecoration: 'none',
-                        borderRadius: 4,
+                        border: 'none',
+                        borderRadius: 6,
                         fontSize: 14,
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        cursor: downloading ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.2s ease'
                       }}
                     >
-                      下载模型
-                    </a>
+                      {downloading ? '下载中...' : '⬇️ 下载模型'}
+                    </button>
+                    {selectedModel.license_label && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                        ⚠️ 下载前请确保遵守许可证要求: {selectedModel.license_label}
+                      </div>
+                    )}
                   </div>
                 )}
                 

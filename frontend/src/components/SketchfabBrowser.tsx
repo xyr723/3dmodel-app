@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { SketchfabModel, SketchfabSearchRequest, SketchfabCategory, SketchfabLicense } from '../types';
-import { searchSketchfabModels, getPopularSketchfabModels } from '../services/sketchfabClient';
+import { searchSketchfabModels, getPopularSketchfabModels, getSketchfabCategories } from '../services/sketchfabClient';
 
 interface SketchfabBrowserProps {
   onModelSelect: (model: SketchfabModel) => void;
@@ -28,29 +28,47 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
   const licenseOptions: { value: SketchfabLicense | ''; label: string }[] = [
     { value: '', label: '所有许可证' },
     { value: 'cc0', label: 'CC0 公共领域' },
-    { value: 'public_domain', label: '公共领域' },
-    { value: 'attribution', label: '署名 (CC BY)' },
-    { value: 'attribution_sharealike', label: '署名-相同方式共享 (CC BY-SA)' },
-    { value: 'attribution_noncommercial', label: '署名-非商业性使用 (CC BY-NC)' },
-    { value: 'attribution_noncommercial_sharealike', label: '署名-非商业性使用-相同方式共享 (CC BY-NC-SA)' },
-    { value: 'attribution_noderivs', label: '署名-禁止演绎 (CC BY-ND)' },
-    { value: 'attribution_noncommercial_noderivs', label: '署名-非商业性使用-禁止演绎 (CC BY-NC-ND)' },
+    { value: 'cc', label: 'Creative Commons' },
+    { value: 'cc-by', label: 'CC BY 署名' },
+    { value: 'cc-by-sa', label: 'CC BY-SA 署名-相同方式共享' },
+    { value: 'cc-by-nc', label: 'CC BY-NC 署名-非商业性使用' },
+    { value: 'cc-by-nc-sa', label: 'CC BY-NC-SA 署名-非商业性使用-相同方式共享' },
     { value: 'all_rights_reserved', label: '保留所有权利' }
   ];
 
-  // 提供默认分类选项，避免自动加载
+  // 加载分类列表
   useEffect(() => {
-    // 设置默认分类，避免发送请求
-    setCategories([
-      { id: '1', name: 'Characters', slug: 'characters' },
-      { id: '2', name: 'Vehicles', slug: 'vehicles' },
-      { id: '3', name: 'Architecture', slug: 'architecture' },
-      { id: '4', name: 'Nature', slug: 'nature' },
-      { id: '5', name: 'Furniture', slug: 'furniture' },
-      { id: '6', name: 'Animals', slug: 'animals' },
-      { id: '7', name: 'Food', slug: 'food' },
-      { id: '8', name: 'Technology', slug: 'technology' }
-    ]);
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await getSketchfabCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // 使用默认分类作为fallback
+        setCategories([
+          { id: '1', name: 'Animals & Pets', slug: 'animals-pets' },
+          { id: '2', name: 'Architecture', slug: 'architecture' },
+          { id: '3', name: 'Art & Abstract', slug: 'art-abstract' },
+          { id: '4', name: 'Cars & Vehicles', slug: 'cars-vehicles' },
+          { id: '5', name: 'Characters & Creatures', slug: 'characters-creatures' },
+          { id: '6', name: 'Cultural Heritage & History', slug: 'cultural-heritage-history' },
+          { id: '7', name: 'Electronics & Gadgets', slug: 'electronics-gadgets' },
+          { id: '8', name: 'Fashion & Style', slug: 'fashion-style' },
+          { id: '9', name: 'Food & Drink', slug: 'food-drink' },
+          { id: '10', name: 'Furniture & Home', slug: 'furniture-home' },
+          { id: '11', name: 'Music', slug: 'music' },
+          { id: '12', name: 'Nature & Plants', slug: 'nature-plants' },
+          { id: '13', name: 'News & Politics', slug: 'news-politics' },
+          { id: '14', name: 'People', slug: 'people' },
+          { id: '15', name: 'Places & Travel', slug: 'places-travel' },
+          { id: '16', name: 'Science & Technology', slug: 'science-technology' },
+          { id: '17', name: 'Sports & Fitness', slug: 'sports-fitness' },
+          { id: '18', name: 'Weapons & Military', slug: 'weapons-military' }
+        ]);
+      }
+    };
+
+    loadCategories();
   }, []);
 
   // 移除自动加载热门模型，用户需要手动搜索
@@ -334,14 +352,30 @@ function SketchfabModelCard({ model, onSelect }: { model: SketchfabModel; onSele
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ fontSize: 11, color: '#888' }}>by {model.author}</span>
-          <span style={{ fontSize: 11, color: '#888' }}>{model.face_count.toLocaleString()} faces</span>
+          <span style={{ fontSize: 11, color: '#888' }}>{model.face_count?.toLocaleString() || 'N/A'} faces</span>
         </div>
         
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 10, color: '#666' }}>👁 {model.view_count.toLocaleString()}</span>
-          <span style={{ fontSize: 10, color: '#666' }}>❤️ {model.like_count.toLocaleString()}</span>
+        {/* 许可证信息 */}
+        <div style={{ marginBottom: 8 }}>
+          <span style={{ 
+            fontSize: 10, 
+            padding: '2px 6px', 
+            backgroundColor: model.license === 'CC0' ? '#28a745' : '#17a2b8', 
+            color: 'white',
+            borderRadius: 4,
+            fontWeight: 'bold'
+          }}>
+            {model.license_label || model.license || 'Unknown License'}
+          </span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, color: '#666' }}>👁 {model.view_count?.toLocaleString() || 0}</span>
+          <span style={{ fontSize: 10, color: '#666' }}>❤️ {model.like_count?.toLocaleString() || 0}</span>
+          <span style={{ fontSize: 10, color: '#666' }}>💬 {model.comment_count?.toLocaleString() || 0}</span>
           {model.animated && <span style={{ fontSize: 10, color: '#007bff' }}>🎬 动画</span>}
           {model.rigged && <span style={{ fontSize: 10, color: '#28a745' }}>🦴 骨骼</span>}
+          {model.downloadable && <span style={{ fontSize: 10, color: '#ffc107' }}>⬇️ 可下载</span>}
         </div>
         
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>

@@ -71,13 +71,11 @@ export type SketchfabModel = {
 
 export type SketchfabLicense = 
   | 'cc0'
-  | 'public_domain' 
-  | 'attribution' 
-  | 'attribution_sharealike' 
-  | 'attribution_noncommercial' 
-  | 'attribution_noncommercial_sharealike' 
-  | 'attribution_noderivs' 
-  | 'attribution_noncommercial_noderivs'
+  | 'cc'
+  | 'cc-by'
+  | 'cc-by-sa'
+  | 'cc-by-nc'
+  | 'cc-by-nc-sa'
   | 'all_rights_reserved';
 
 export type SketchfabSearchRequest = {
@@ -103,7 +101,6 @@ export type SketchfabSearchResponse = {
   total_pages: number;
   models: SketchfabModel[];
   search_time: number;
-  filters_applied: Record<string, any>;
   searched_at: string;
 };
 
@@ -118,14 +115,14 @@ export type SketchfabDownloadResponse = {
   download_id: string;
   status: string;
   message: string;
-  download_url: string;
-  file_format: string;
-  file_size: number;
-  model_name: string;
-  author: string;
-  license: string;
+  download_url?: string;
+  file_format?: string;
+  file_size?: number;
+  model_name?: string;
+  author?: string;
+  license?: string;
   requested_at: string;
-  expires_at: string;
+  expires_at?: string;
   attribution_required: boolean;
   commercial_use: boolean;
 };
@@ -135,4 +132,10 @@ export type SketchfabCategory = {
   name: string;
   slug: string;
   parent?: string;
+};
+
+// Sketchfab 分类响应类型
+export type SketchfabCategoriesResponse = {
+  categories: string[];
+  count: number;
 }; 

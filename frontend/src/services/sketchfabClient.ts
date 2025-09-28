@@ -6,7 +6,8 @@ import type {
   SketchfabSearchResponse, 
   SketchfabDownloadRequest, 
   SketchfabDownloadResponse,
-  SketchfabCategory 
+  SketchfabCategory,
+  SketchfabCategoriesResponse 
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000/api';
@@ -30,7 +31,6 @@ export async function searchSketchfabModels(request: SketchfabSearchRequest): Pr
         total_pages: 0,
         models: [],
         search_time: 0,
-        filters_applied: {},
         searched_at: new Date().toISOString()
       };
     }
@@ -209,11 +209,24 @@ export async function getSketchfabCategories(): Promise<SketchfabCategory[]> {
     if (!API_KEY) {
       // Mock response for development
       return [
-        { id: '1', name: 'Characters', slug: 'characters' },
-        { id: '2', name: 'Vehicles', slug: 'vehicles' },
-        { id: '3', name: 'Architecture', slug: 'architecture' },
-        { id: '4', name: 'Nature', slug: 'nature' },
-        { id: '5', name: 'Furniture', slug: 'furniture' }
+        { id: '1', name: 'Animals & Pets', slug: 'animals-pets' },
+        { id: '2', name: 'Architecture', slug: 'architecture' },
+        { id: '3', name: 'Art & Abstract', slug: 'art-abstract' },
+        { id: '4', name: 'Cars & Vehicles', slug: 'cars-vehicles' },
+        { id: '5', name: 'Characters & Creatures', slug: 'characters-creatures' },
+        { id: '6', name: 'Cultural Heritage & History', slug: 'cultural-heritage-history' },
+        { id: '7', name: 'Electronics & Gadgets', slug: 'electronics-gadgets' },
+        { id: '8', name: 'Fashion & Style', slug: 'fashion-style' },
+        { id: '9', name: 'Food & Drink', slug: 'food-drink' },
+        { id: '10', name: 'Furniture & Home', slug: 'furniture-home' },
+        { id: '11', name: 'Music', slug: 'music' },
+        { id: '12', name: 'Nature & Plants', slug: 'nature-plants' },
+        { id: '13', name: 'News & Politics', slug: 'news-politics' },
+        { id: '14', name: 'People', slug: 'people' },
+        { id: '15', name: 'Places & Travel', slug: 'places-travel' },
+        { id: '16', name: 'Science & Technology', slug: 'science-technology' },
+        { id: '17', name: 'Sports & Fitness', slug: 'sports-fitness' },
+        { id: '18', name: 'Weapons & Military', slug: 'weapons-military' }
       ];
     }
 
@@ -229,9 +242,17 @@ export async function getSketchfabCategories(): Promise<SketchfabCategory[]> {
       throw new Error(text || 'Failed to get Sketchfab categories');
     }
 
-    const data = await response.json();
-    await cacheSet(cacheKey, data, 1000 * 60 * 60 * 24); // Cache for 24 hours
-    return data;
+    const data: SketchfabCategoriesResponse = await response.json();
+    
+    // 将后端返回的字符串数组转换为SketchfabCategory对象数组
+    const categories: SketchfabCategory[] = data.categories.map((category, index) => ({
+      id: (index + 1).toString(),
+      name: category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      slug: category
+    }));
+    
+    await cacheSet(cacheKey, categories, 1000 * 60 * 60 * 24); // Cache for 24 hours
+    return categories;
   });
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SketchfabBrowser } from '../components/SketchfabBrowser';
-import { ModelViewer } from '../components/ModelViewer';
+import { SketchfabViewer } from '../components/SketchfabViewer';
 import type { SketchfabModel, GeneratedModel, EvaluationMetrics, Feedback } from '../types';
 import { useEvalStore } from '../store/evalStore';
 import { sketchfabModelToGeneratedModel, downloadSketchfabModel } from '../services/sketchfabClient';
@@ -99,7 +99,7 @@ export default function SketchfabPage() {
             fontSize: '16px',
             lineHeight: '1.5'
           }}>
-            浏览和搜索 Sketchfab 上的 3D 模型 - 点击搜索按钮开始浏览
+            浏览和搜索 Sketchfab 上的 3D 模型。页面会自动预览推荐模型，搜索后会自动选择第一个结果进行预览。
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function SketchfabPage() {
           <div className="panel">
             <h3 className="h3">模型预览</h3>
             <div className="preview">
-              <ModelViewer url={generatedModel?.glbUrl} onMetrics={onMetrics} />
+              <SketchfabViewer model={selectedModel} onMetrics={onMetrics} />
             </div>
             
             {selectedModel && (
@@ -198,17 +198,17 @@ export default function SketchfabPage() {
                       {selectedModel.author}
                     </a>
                   </div>
-                  <div><strong>面数:</strong> {selectedModel.face_count.toLocaleString()}</div>
-                  <div><strong>顶点数:</strong> {selectedModel.vertex_count.toLocaleString()}</div>
-                  <div><strong>许可证:</strong> {selectedModel.license_label}</div>
-                  <div><strong>浏览数:</strong> {selectedModel.view_count.toLocaleString()}</div>
-                  <div><strong>点赞数:</strong> {selectedModel.like_count.toLocaleString()}</div>
+                  <div><strong>面数:</strong> {selectedModel.face_count?.toLocaleString() || 'N/A'}</div>
+                  <div><strong>顶点数:</strong> {selectedModel.vertex_count?.toLocaleString() || 'N/A'}</div>
+                  <div><strong>许可证:</strong> {selectedModel.license_label || selectedModel.license || 'N/A'}</div>
+                  <div><strong>浏览数:</strong> {selectedModel.view_count?.toLocaleString() || '0'}</div>
+                  <div><strong>点赞数:</strong> {selectedModel.like_count?.toLocaleString() || '0'}</div>
                 </div>
                 
                 <div style={{ marginBottom: 12 }}>
                   <strong>标签:</strong>
                   <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {selectedModel.tags.map(tag => (
+                    {(selectedModel.tags || []).map(tag => (
                       <span 
                         key={tag}
                         style={{ 
@@ -267,7 +267,7 @@ export default function SketchfabPage() {
                 )}
                 
                 <div style={{ marginTop: 12, fontSize: 12, color: '#6c757d' }}>
-                  发布时间: {new Date(selectedModel.published_at).toLocaleDateString()}
+                  发布时间: {selectedModel.published_at ? new Date(selectedModel.published_at).toLocaleDateString() : 'N/A'}
                 </div>
               </div>
             )}

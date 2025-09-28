@@ -36,14 +36,24 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
     { value: 'all_rights_reserved', label: '保留所有权利' }
   ];
 
-  // 加载分类列表
+  // 加载分类列表和推荐模型
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadInitialData = async () => {
       try {
+        // 加载分类
         const fetchedCategories = await getSketchfabCategories();
         setCategories(fetchedCategories);
+        
+        // 自动加载一个推荐模型进行预览 (只在有API密钥时)
+        const API_KEY = import.meta.env.VITE_BACKEND_API_KEY || '';
+        if (API_KEY) {
+          const popularModels = await getPopularSketchfabModels(undefined, 1);
+          if (popularModels.length > 0) {
+            onModelSelect(popularModels[0]);
+          }
+        }
       } catch (error) {
-        console.error('Failed to load categories:', error);
+        console.error('Failed to load initial data:', error);
         // 使用默认分类作为fallback
         setCategories([
           { id: '1', name: 'Animals & Pets', slug: 'animals-pets' },
@@ -68,8 +78,8 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
       }
     };
 
-    loadCategories();
-  }, []);
+    loadInitialData();
+  }, [onModelSelect]);
 
   // 移除自动加载热门模型，用户需要手动搜索
 
@@ -97,11 +107,21 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
         const response = await searchSketchfabModels(searchRequest);
         setModels(response.models);
         setTotalPages(response.total_pages);
+        
+        // 自动选择第一个模型进行预览
+        if (response.models.length > 0) {
+          onModelSelect(response.models[0]);
+        }
       } else {
         // 没有搜索关键词时加载热门模型
         const popular = await getPopularSketchfabModels(selectedCategory || undefined, 20);
         setModels(popular);
         setTotalPages(1);
+        
+        // 自动选择第一个模型进行预览
+        if (popular.length > 0) {
+          onModelSelect(popular[0]);
+        }
       }
     } catch (err: any) {
       setError(err?.message || 'Search failed');
@@ -290,7 +310,7 @@ export function SketchfabBrowser({ onModelSelect }: SketchfabBrowserProps) {
           <div style={{ fontSize: 14, lineHeight: 1.6 }}>
             {searchQuery.trim() ? 
               '没有找到模型，请尝试其他搜索条件' : 
-              '输入关键词进行搜索，或者直接点击"浏览热门"按钮查看热门模型'
+              '输入关键词进行搜索，或者直接点击"浏览热门"按钮查看热门模型。搜索结果的第一个模型会自动在右侧预览。'
             }
           </div>
           <div style={{ marginTop: 16, fontSize: 12, color: '#6c757d' }}>
@@ -379,7 +399,7 @@ function SketchfabModelCard({ model, onSelect }: { model: SketchfabModel; onSele
         </div>
         
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          {model.tags.slice(0, 3).map(tag => (
+          {(model.tags || []).slice(0, 3).map(tag => (
             <span 
               key={tag}
               style={{ 

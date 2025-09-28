@@ -10,6 +10,7 @@ export default function App() {
 		<div style={{ width: '100%' }}>
 			<header className="app-header">
 				{/* <button onClick={() => setTab('generate')} disabled={tab==='generate'}>Generate</button> */}
+
 				<button onClick={() => setTab('sketchfab')} disabled={tab==='sketchfab'}>Sketchfab</button>
 				<button onClick={() => setTab('dashboard')} disabled={tab==='dashboard'}>Dashboard</button>
 			</header>

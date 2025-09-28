@@ -147,7 +147,7 @@ class SketchfabSearchRequest(BaseModel):
     
     query: str = Field(..., min_length=1, max_length=200, description="搜索关键词")
     category: Optional[str] = Field(None, description="模型分类")
-    license: Optional[str] = Field("cc", description="许可证类型 (cc, cc-by, cc-by-sa等)")
+    license: Optional[str] = Field("cc0", description="许可证类型 (cc0, cc-by, cc-by-sa等)")
     animated: Optional[bool] = Field(None, description="是否包含动画")
     rigged: Optional[bool] = Field(None, description="是否有骨骼绑定")
     downloadable: bool = Field(True, description="是否可下载")

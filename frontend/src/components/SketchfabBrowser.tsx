@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+
 import type { SketchfabModel, SketchfabSearchRequest, SketchfabCategory, SketchfabLicense, SketchfabSearchRecord } from '../types';
 import { searchSketchfabModels, getPopularSketchfabModels, getSketchfabCategories } from '../services/sketchfabClient';
 import { useSearchStore } from '../store/searchStore';
+
 
 interface SketchfabBrowserProps {
   onModelSelect: (model: SketchfabModel) => void;

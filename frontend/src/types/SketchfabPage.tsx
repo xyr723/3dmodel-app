@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { SketchfabBrowser } from '../components/SketchfabBrowser';
 import { SketchfabViewer } from '../components/SketchfabViewer';
-import type { SketchfabModel, GeneratedModel, EvaluationMetrics } from '../types';
+import type { SketchfabModel, GeneratedModel, EvaluationMetrics, Feedback } from '../types';
 import { useEvalStore } from '../store/evalStore';
 import { sketchfabModelToGeneratedModel, downloadSketchfabModel } from '../services/sketchfabClient';
 
@@ -9,6 +9,8 @@ export default function SketchfabPage() {
   const [selectedModel, setSelectedModel] = useState<SketchfabModel | null>(null);
   const [generatedModel, setGeneratedModel] = useState<GeneratedModel | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const addMetrics = useEvalStore((s) => s.addMetrics);
+  const addFeedback = useEvalStore((s) => s.addFeedback);
 
   const handleModelSelect = (model: SketchfabModel) => {
     setSelectedModel(model);
@@ -29,6 +31,17 @@ export default function SketchfabPage() {
     });
   };
 
+  const onRate = async (rating: 1 | 2 | 3 | 4 | 5) => {
+    if (!generatedModel) return;
+    const fb: Feedback = {
+      modelId: generatedModel.id,
+      inputHash: generatedModel.inputHash,
+      rating,
+      timestamp: Date.now(),
+    };
+    await addFeedback(fb);
+    alert('感谢您的反馈！');
+  };
 
   const handleDownload = async () => {
     if (!selectedModel || !selectedModel.downloadable) return;
@@ -105,6 +118,57 @@ export default function SketchfabPage() {
               <SketchfabViewer model={selectedModel} onMetrics={onMetrics} />
             </div>
             
+            {selectedModel && (
+              <div style={{ 
+                marginTop: '24px', 
+                display: 'flex', 
+                gap: '12px', 
+                alignItems: 'center', 
+                flexWrap: 'wrap',
+                padding: '16px',
+                background: '#f8fafc',
+                borderRadius: '8px'
+              }}>
+                <span style={{ 
+                  color: '#4b5563', 
+                  fontWeight: '500',
+                  fontSize: '16px'
+                }}>
+                  为该模型打分：
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[1,2,3,4,5].map((r) => (
+                    <button 
+                      key={r} 
+                      onClick={() => onRate(r as any)} 
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        fontWeight: '600',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                      }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 模型详情 */}
             {selectedModel && (

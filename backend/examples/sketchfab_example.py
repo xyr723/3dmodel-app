@@ -59,7 +59,7 @@ class SketchfabAPIExample:
                     print(f"下载模型失败: {response.status}")
                     return {}
     
-    async def get_popular_models(self, category: str = None, limit: int = 20) -> Dict[str, Any]:
+    async def get_popular_models(self, category: str = None, limit: int = 1) -> Dict[str, Any]:
         """获取热门模型"""
         url = f"{self.base_url}/api/sketchfab/popular"
         params = {"limit": limit}
@@ -105,7 +105,7 @@ async def main():
     
     # 2. 获取热门角色模型
     print("2. 获取热门角色模型...")
-    popular_result = await api.get_popular_models(category="characters", limit=3)
+    popular_result = await api.get_popular_models(category="characters", limit=1)
     
     if popular_result:
         print(f"热门角色模型:")
